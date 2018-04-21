@@ -1,4 +1,5 @@
 var app = require('express')();
+var gps = require('./gps.js');
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
 var exec = require('child_process').exec, child;
@@ -19,6 +20,8 @@ app.get('/', function(req, res){
 });
 
 child = exec("sudo bash start_stream.sh", function(error, stdout, stderr){});
+
+gps.start();
 
 //Whenever someone connects this gets executed
 io.on('connection', function(socket){

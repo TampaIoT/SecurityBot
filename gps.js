@@ -2,6 +2,8 @@ var SerialPort  = require("serialport"),
     util  = require("util"),
     nmea = require('./NMEA.js');
 
+var GPS = ( function() {
+
 var currentSentance = "";
 
 var portName = '/dev/ttyS0';
@@ -13,38 +15,59 @@ var serialPort = new SerialPort(portName, {
    flowControl: false
 });
 
-serialPort.on("open", function () {
-  console.log('open');
 
-  serialPort.on('data', function(data) {
-    for(var ch of data) {
-        ch = String.fromCharCode(ch);
-        if(ch === '\n') {
-                if(currentSentance && currentSentance[0] === '$') {
-                try
-                {
-                        var sentance = nmea.parse(currentSentance);
-                        console.log(sentance.id);
-                        switch(sentance.id) {
-                                case 'GPGSV':
-                                        console.log('Sats',sentance.count);
+var eventHandlers = {};
+
+	var gps = {
+	};
+
+	gps.start = function() {
+	serialPort.on("open", function () {
+	  console.log('open');
+
+		if(this.opened){
+			this.opened();
+		}
+
+	  serialPort.on('data', function(data) {
+	    for(var ch of data) {
+        	ch = String.fromCharCode(ch);
+		if(ch === '\n') {
+			if(currentSentance && currentSentance[0] === '$') {
+                	try
+	                {
+        	                var sentance = nmea.parse(currentSentance);
+                	        switch(sentance.id) {
+                        	        case 'GPGSV':
+                                	        console.log('Sats',sentance.count);
                                         break;
-                                case 'GNGGA':
-                                        console.log('Pos', sentance.latitude, sentance.longitude, sentance.satellites, sentance.fix, sentance.hdop);                          $
+	                                case 'GNGGA':
+						eventHandlers["position"](currentSentance);
+						if(this.positionUpdated) {
+							positionUpdated(sentance.latitude, sentance.longitude, sentance.satellites, sentance.fix, sentance.hdop);
+						}
+                	                        console.log('Pos', sentance.latitude, sentance.longitude, sentance.satellites, sentance.fix, sentance.hdop);                          
                                         break;
-                        }
-                        console.log(sentance.id);
-                }
-                catch(e) {}
+                        	}
+	                        console.log(sentance.id);
+        	        }
+                	catch(e) {}
 
-                currentSentance = "";
-                }
-        }
-        else {
-                currentSentance += ch;
-        }
+                	}
 
-    }
-  });
+	                currentSentance = "";
+        	}
+	        else {
+        	        currentSentance += ch;
+	        }
 
+    		}
+  	});
+	}
+
+	return gps;
 });
+
+}());
+
+module.exports = GPS;
