@@ -382,6 +382,17 @@ function draw() {
 		voltage = msg;
 	});
 
+	socket.on('lat', function(msg){
+		document.getElementById("lat").innerHTML = 'Latitude: ' + msg.toFixed(6) ;
+		longitude = msg;
+	});
+
+
+	socket.on('lon', function(msg){
+		document.getElementById("lon").innerHTML = 'Longitude: ' + msg.toFixed(6);
+		latitude = msg;
+	});
+
 	socket.on('cam', function(msg){
 		document.getElementById("stream").innerHTML = img;
 	});
@@ -580,8 +591,10 @@ function handleHeadlightClick(cb) {
 </center>
 
 <div class="sidenav">
-  <center id="temp" style="padding:40%;">0°C</center>
-  <center id="volt" style="padding:40%;">0V</center>
+  <center id="temp" style="padding:40%;">????</center>
+  <center id="volt" style="padding:40%;">????</center>
+  <center id="lat" style="padding:40%;">Latitude: ????</center>
+  <center id="lon" style="padding:40%;">Longitude: ????</center>
 </div>
 <div class="sidenav" style="right:0;z-index: 2;">
   <center class="off_button" type="button" onclick="shutdown()">OFF</center>
