@@ -19,9 +19,18 @@ app.get('/', function(req, res){
   console.log('HTML sent to client');
 });
 
-child = exec("sudo bash start_stream.sh", function(error, stdout, stderr){});
+//child = exec("sudo bash start_stream.sh", function(error, stdout, stderr){});
 
-gps.start();
+gps.opened = function() {
+	console.log("GPS Port Opened");
+}
+
+gps.start(function(lat, lon, satCount, fix, hdop) {
+	console.log("Position Detected", lat, lon, satCount, fix, hdop); 
+
+	io.emit('lat',lat, 'lon', lon);
+});
+
 
 //Whenever someone connects this gets executed
 io.on('connection', function(socket){
@@ -54,6 +63,7 @@ io.on('connection', function(socket){
   });
   
   socket.on('light', function(toggle) {
+	console.log(toggle);
     LED.digitalWrite(toggle);    
   });  
   

@@ -21,7 +21,7 @@ var GPS = (function () {
 	var gps = {
 	};
 
-	gps.start = function () {
+	gps.start = function (updateHandler) {
 		serialPort.on("open", function () {
 			console.log('open');
 
@@ -38,17 +38,14 @@ var GPS = (function () {
 								var sentance = nmea.parse(currentSentance);
 								switch (sentance.id) {
 									case 'GPGSV':
-										console.log('Sats', sentance.count);
+
 										break;
 									case 'GNGGA':
-										eventHandlers["position"](currentSentance);
-										if (this.positionUpdated) {
-											positionUpdated(sentance.latitude, sentance.longitude, sentance.satellites, sentance.fix, sentance.hdop);
+										if (updateHandler) {
+											updateHandler(sentance.latitude, sentance.longitude, sentance.satellites, sentance.fix, sentance.hdop);
 										}
-										console.log('Pos', sentance.latitude, sentance.longitude, sentance.satellites, sentance.fix, sentance.hdop);
 										break;
 								}
-								console.log(sentance.id);
 							}
 							catch (e) { }
 
