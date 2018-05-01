@@ -1,4 +1,15 @@
+/*
+ * GPS/Compass Module
+ * http://www.radiolink.com.cn/doce/product-detail-115.html
+ *
+ * HMC5893 Data Sheet
+ * https://aerocontent.honeywell.com/aero/common/documents/myaerospacecatalog-documents/Defense_Brochures-documents/HMC5983_3_Axis_Compass_IC.pdf
+ * 
+ * Compass Module
+ * https://github.com/psiphi75/compass-hmc5883l
+ */
 var app = require('express')();
+var HMC5883L = require('compass-hmc5883l');
 var gps = require('./gps.js');
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
@@ -6,12 +17,24 @@ var exec = require('child_process').exec, child;
 var port = process.env.PORT || 3000;
 var ads1x15 = require('node-ads1x15');
 var adc = new ads1x15(1); // set to 0 for ads1015
+var i2c = require('i2c');
+
+var compass = new HMC5883L(1);
+
+/*
+var address = 0x1E;
+var wire = new i2c(address, {device: '/dev/i2c-1'});
+wire.writeByte(0, function(err){
+	console.log(err);
+});
+*/
 
 var Gpio = require('pigpio').Gpio,
   A1 = new Gpio(27, {mode: Gpio.OUTPUT}),
   A2 = new Gpio(17, {mode: Gpio.OUTPUT}),
   B1 = new Gpio( 4, {mode: Gpio.OUTPUT}),
   B2 = new Gpio(18, {mode: Gpio.OUTPUT});
+  BUZZER = new Gpio(10, {mode: Gpio.OUTPUT}),
   LED = new Gpio(22, {mode: Gpio.OUTPUT});
 
 app.get('/', function(req, res){
@@ -19,16 +42,27 @@ app.get('/', function(req, res){
   console.log('HTML sent to client');
 });
 
-//child = exec("sudo bash start_stream.sh", function(error, stdout, stderr){});
+BUZZER.digitalWrite(1);
 
-gps.opened = function() {
-	console.log("GPS Port Opened");
-}
+child = exec("sudo bash start_stream.sh", function(error, stdout, stderr){});
+
+
+//compass.setOffsetMatrix(0, 0, 0);
+//compass.setScaleMatrix(1, 1, 1);
+//compass.initialize();
 
 gps.start(function(lat, lon, satCount, fix, hdop) {
 	console.log("Position Detected", lat, lon, satCount, fix, hdop); 
 
-	io.emit('lat',lat, 'lon', lon);
+	io.emit('fix',fix);
+	if(fix === 1) {
+		io.emit('lat',parseFloat(lat));
+		io.emit('lon',parseFloat(lon));
+	}
+	else  {
+		io.emit('lat',-1);
+		io.emit('lon',-1);
+	}
 });
 
 
@@ -102,6 +136,22 @@ io.on('connection', function(socket){
          console.log('temp', temp);
       }
     });
+//	compass.getHeadingDegrees('x','y', function(err, heading) {
+//		console.log(heading* 180 / Math.PI);
+//	});
+
+
+	compass.getRawValues(function(err, vals) {
+		if(err) {
+			console.log(err);
+		}
+		else {
+			console.log(vals);
+		}
+	});
+
+
+/*
     if(!adc.busy){
       adc.readADCSingleEnded(0, '4096', '250', function(err, data){ //channel, gain, samples
         if(!err){          
@@ -110,7 +160,7 @@ io.on('connection', function(socket){
           io.emit('volt', voltage);
         }
       });
-    }
+    }*/
   }, 5000);
 
 });

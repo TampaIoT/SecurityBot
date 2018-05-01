@@ -383,12 +383,14 @@ function draw() {
 	});
 
 	socket.on('lat', function(msg){
+		console.log('lat recv', msg);
 		document.getElementById("lat").innerHTML = 'Latitude: ' + msg.toFixed(6) ;
 		longitude = msg;
 	});
 
 
 	socket.on('lon', function(msg){
+		console.log('lon recv', msg);
 		document.getElementById("lon").innerHTML = 'Longitude: ' + msg.toFixed(6);
 		latitude = msg;
 	});

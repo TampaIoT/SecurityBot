@@ -1,3 +1,7 @@
+/* Pulled from library 
+https://github.com/nherment/node-nmea/tree/5bd3f87fad3e087f13e7c0cbb1d42a069d56d15a
+ */
+
 var SerialPort = require("serialport"),
 	util = require("util"),
 	nmea = require('./NMEA.js');
