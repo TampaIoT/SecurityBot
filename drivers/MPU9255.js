@@ -1,4 +1,4 @@
-const i2c = require('i2c');
+const i2c = require('../node_modules/i2c');
 
 const address = 0x68;
 

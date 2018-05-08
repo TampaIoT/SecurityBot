@@ -1,4 +1,4 @@
-var ads1x15 = require('node-ads1x15');
+var ads1x15 = require('../node_modules/node-ads1x15');
 var adc = new ads1x15(1); // set to 0 for ads1015
 
 console.log('Test Started');
