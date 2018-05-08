@@ -1,4 +1,4 @@
-var HMC5883L = require('./hmc5983.js');
+var HMC5883L = require('../drivers/hmc5983.js');
 
 // Connect with the HMC5883L compass on i2c bus number 2
 var compass = new HMC5883L(1);

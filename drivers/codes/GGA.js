@@ -1,4 +1,4 @@
-var Helper = require("../Helper.js");
+var Helper = require("../GpsHelper.js");
 
 /** nmea encoder object
  * $--GGA,hhmmss,llll.ll,a,yyyyy.yy,a,x,xx,x.x,x.x,M,x.x,M,x.x,xxxx*hh

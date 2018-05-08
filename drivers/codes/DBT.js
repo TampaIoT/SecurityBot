@@ -1,4 +1,4 @@
-var Helper = require("../Helper.js");
+var Helper = require("../GpsHelper.js");
 
 /*
  === DBT - Depth below transducer ===

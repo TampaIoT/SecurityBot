@@ -1,4 +1,4 @@
-var Helper = require("../Helper.js");
+var Helper = require("../GpsHelper.js");
 
 /** RMC encoder object
  * $GPRMC,hhmmss.ss,A,llll.ll,a,yyyyy.yy,a,x.x,x.x,ddmmyy,x.x,x.x,a*hh

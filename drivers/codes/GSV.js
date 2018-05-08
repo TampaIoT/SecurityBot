@@ -1,4 +1,4 @@
-var Helper = require("../Helper.js");
+var Helper = require("../GpsHelper.js");
 //TODO: docbloc
 exports.Decoder = function(id) {
     this.id = id;

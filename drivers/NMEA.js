@@ -11,7 +11,7 @@ var DBT = require("./codes/DBT.js");
 var HDG = require("./codes/HDG.js");
 var VHW = require("./codes/VHW.js");
 var VWR = require("./codes/VWR.js");
-var Helper = require("./Helper.js");
+var Helper = require("./GpsHelper.js");
 
 /** NMEA module */
 var NMEA = ( function() {

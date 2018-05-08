@@ -1,5 +1,5 @@
 
-var Helper = require("../Helper.js");
+var Helper = require("../GpsHelper.js");
 
 /*
 
