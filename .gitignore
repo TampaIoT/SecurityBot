@@ -40,7 +40,6 @@ jspm_packages/
 typings/
 
 # Pacakge Management
-package-lock.json
 
 # Optional npm cache directory
 .npm
