@@ -10,7 +10,7 @@
  */
 var app = require('express')();
 var HMC5883L = require('compass-hmc5883l');
-var gps = require('./gps.js');
+var gps = require('./drivers/gps.js');
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
 var exec = require('child_process').exec, child;
@@ -38,7 +38,7 @@ var Gpio = require('pigpio').Gpio,
   LED = new Gpio(22, {mode: Gpio.OUTPUT});
 
 app.get('/', function(req, res){
-  res.sendfile('Touch.html');
+  res.sendfile('./pages/Touch.html');
   console.log('HTML sent to client');
 });
 
@@ -151,7 +151,7 @@ io.on('connection', function(socket){
 	});
 
 
-/*
+
     if(!adc.busy){
       adc.readADCSingleEnded(0, '4096', '250', function(err, data){ //channel, gain, samples
         if(!err){          
@@ -160,7 +160,7 @@ io.on('connection', function(socket){
           io.emit('volt', voltage);
         }
       });
-    }*/
+    }
   }, 5000);
 
 });
