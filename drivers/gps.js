@@ -25,7 +25,7 @@ var GPS = (function () {
 	var gps = {
 	};
 
-	gps.start = function (updateHandler) {
+	gps.start = function (updateHandler, noFixHandler) {
 		serialPort.on("open", function () {
 			console.log('open');
 
@@ -45,8 +45,11 @@ var GPS = (function () {
 
 										break;
 									case 'GNGGA':
-										if (updateHandler) {
-											updateHandler(sentance.latitude, sentance.longitude, sentance.satellites, sentance.fix, sentance.hdop);
+										if (updateHandler && sentance.fix) {
+											updateHandler(sentance.latitude, sentance.longitude, sentance.satellites, sentance.hdop);
+										}
+										else if(noFixHandler && !sentance.fix) {
+											noFixHandler();
 										}
 										break;
 								}
