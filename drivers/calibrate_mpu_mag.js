@@ -45,9 +45,9 @@
  */
 
 // Instantiate and initialize.
-var mpu925x = require('../mpu925x');
+var mpu925x = require('./mpu925x');
 var mpu = new mpu925x({
-    device: '/dev/i2c-2',
+    device: '/dev/i2c-1',
     scaleValues: true,
     UpMagneto: true
 });
