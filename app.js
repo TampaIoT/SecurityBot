@@ -21,6 +21,7 @@ var ads1x15 = require('node-ads1x15');
 var adc = new ads1x15(1); // set to 0 for ads1015
 var i2c = require('i2c');
 var mpu925x = require('./drivers/mpu925x');
+var tfmini = require('./drivers/TFMini');
 
 /* With stick driver it's looking for wrong WHOAMI on MPU */
 var mpu = new mpu925x({UpMagneto: true, DEBUG: true, GYRO_FS: 0, ACCEL_FS: 1});
@@ -40,6 +41,10 @@ var mpu = new mpu925x({UpMagneto: true, DEBUG: true, GYRO_FS: 0, ACCEL_FS: 1});
 		compAngleX = 0,
 		compAngleY = 0,
 		compAngleZ = 0;
+
+	var lidarDist = 0,
+			lidarSt = 0,
+			lidarSignalQuality = 0;
 
 var micros = function() {
 		return new Date().getTime();
@@ -62,15 +67,11 @@ if(mpu.initialize()) {
 	compAngleZ = mpu.getYaw(values);
 }
 
-
-
-/*
-var address = 0x1E;
-var wire = new i2c(address, {device: '/dev/i2c-1'});
-wire.writeByte(0, function(err){
-	console.log(err);
+tfmini.start(function(dist, st, quality) {
+	lidarDist = dist;
+	lidarSt = st;
+	lidarSignalQuality = quality;
 });
-*/
 
 var Gpio = require('pigpio').Gpio,
   A1 = new Gpio(27, {mode: Gpio.OUTPUT}),
@@ -88,7 +89,6 @@ app.get('/', function(req, res){
 BUZZER.digitalWrite(1);
 
 child = exec("sudo bash start_stream.sh", function(error, stdout, stderr){});
-
 
 //compass.setOffsetMatrix(0, 0, 0);
 //compass.setScaleMatrix(1, 1, 1);
@@ -114,7 +114,6 @@ if(!mpu.initialize()) {
 else {
 	console.log('MPU925X Online');
 }
-
 
 //Whenever someone connects this gets executed
 io.on('connection', function(socket){
@@ -142,12 +141,18 @@ io.on('connection', function(socket){
       B1.pwmWrite(0);
       B2.pwmWrite(Math.abs(msy));
     }
-
-
   });
-  
+
+	socket.on('horn', function(toggle) {
+		BUZZER.digitalWrite(0);
+		setTimeout(function() {
+			BUZZER.digitalWrite(1);
+		}, 500);
+    LED.digitalWrite(toggle);    
+  });  
+
   socket.on('light', function(toggle) {
-	console.log(toggle);
+		console.log(toggle);
     LED.digitalWrite(toggle);    
   });  
   
@@ -186,6 +191,8 @@ io.on('connection', function(socket){
 					console.log('temp', temp);
 				}
 		});
+
+		io.emit('lidar', {dist:lidarDist, st: lidarDist, signalQuality: lidarSignalQuality});
 
 		if(mpuInitialized) {
 			var values = mpu.getMotion9();
@@ -235,9 +242,7 @@ io.on('connection', function(socket){
 			io.emit('accel_data', {accel: accel, magneto: magneto});
 	
 		}
-
     
-
 //	compass.getHeadingDegrees('x','y', function(err, heading) {
 //		console.log(heading* 180 / Math.PI);
 //	});
@@ -251,8 +256,6 @@ io.on('connection', function(socket){
 			console.log(vals);
 		}
 	});*/
-
-
 
     if(!adc.busy){
       adc.readADCSingleEnded(0, '4096', '250', function(err, data){ //channel, gain, samples

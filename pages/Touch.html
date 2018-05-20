@@ -393,12 +393,18 @@ function draw() {
 		longitude = msg;
 	});
 
-
 	socket.on('lon', function(msg){
 		console.log('lon recv', msg);
 		document.getElementById("lon").innerHTML = 'Longitude: ' + msg.toFixed(6);
 		latitude = msg;
 	});
+
+		socket.on('lidar', function(msg){
+		console.log('lat recv', msg);
+		document.getElementById("lidar").innerHTML = 'Latitude: ' + msg.dist.toFixed(6) ;
+		longitude = msg;
+	});
+
 
 	socket.on('cam', function(msg){
 		document.getElementById("stream").innerHTML = img;
@@ -602,8 +608,10 @@ function handleHeadlightClick(cb) {
   <center id="volt" style="padding:10%;">????</center>
   <center id="acc" style="padding:10%;">Acc: ????</center>
   <center id="mag" style="padding:10%;">Mag: ????</center>
+  <center id="lidar" style="padding:10%;">Lidar: ????</center>
   <center id="lat" style="padding:10%;">Latitude: ????</center>
   <center id="lon" style="padding:10%;">Longitude: ????</center>
+  
 </div>
 <div class="sidenav" style="right:0;z-index: 2;">
   <center class="off_button" type="button" onclick="shutdown()">OFF</center>
