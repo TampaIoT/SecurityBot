@@ -177,64 +177,64 @@ io.on('connection', function(socket){
   });
 
   setInterval(function(){ // send temperature every 5 sec
-    child = exec("cat /sys/class/thermal/thermal_zone0/temp", function(error, stdout, stderr){
-      if(error !== null){
-         console.log('exec error: ' + error);
-      } else {
-         var temp = parseFloat(stdout)/1000;
-         io.emit('temp', temp);
-         console.log('temp', temp);
-      }
-	});
-
-	if(mpuInitialized) {
-	var values = mpu.getMotion9();
-
-				var dt = (micros() - timer) / 1000000;
-				timer = micros();
-
-				pitch = mpu.getPitch(values);
-				roll = mpu.getRoll(values);
-				yaw = mpu.getYaw(values);
-
-				var gyroXrate = values[3] / 131.0;
-				var gyroYrate = values[4] / 131.0;
-				var gyroZrate = values[5] / 131.0;
-
-				if ((roll < -90 && kalAngleX > 90) || (roll > 90 && kalAngleX < -90)) {
-					kalmanX.setAngle(roll);
-					compAngleX = roll;
-					kalAngleX = roll;
-					gyroXangle = roll;
+			child = exec("cat /sys/class/thermal/thermal_zone0/temp", function(error, stdout, stderr){
+				if(error !== null){
+					console.log('exec error: ' + error);
 				} else {
-					kalAngleX = kalmanX.getAngle(roll, gyroXrate, dt);
+					var temp = parseFloat(stdout)/1000;
+					io.emit('temp', temp);
+					console.log('temp', temp);
 				}
+		});
 
-				if (Math.abs(kalAngleX) > 90) {
-					gyroYrate = -gyroYrate;
-				}
-				kalAngleY = kalmanY.getAngle(pitch, gyroYrate, dt);
+		if(mpuInitialized) {
+			var values = mpu.getMotion9();
 
-				gyroXangle += gyroXrate * dt;
-				gyroYangle += gyroYrate * dt;
-				compAngleX = 0.93 * (compAngleX + gyroXrate * dt) + 0.07 * roll;
-				compAngleY = 0.93 * (compAngleY + gyroYrate * dt) + 0.07 * pitch;
+			var dt = (micros() - timer) / 1000000;
+			timer = micros();
 
-				if (gyroXangle < -180 || gyroXangle > 180) gyroXangle = kalAngleX;
-				if (gyroYangle < -180 || gyroYangle > 180) gyroYangle = kalAngleY;
+			pitch = mpu.getPitch(values);
+			roll = mpu.getRoll(values);
+			yaw = mpu.getYaw(values);
 
-				var accel = {
-					pitch: compAngleY,
-					roll: compAngleX
-				};
+			var gyroXrate = values[3] / 131.0;
+			var gyroYrate = values[4] / 131.0;
+			var gyroZrate = values[5] / 131.0;
+
+			if ((roll < -90 && kalAngleX > 90) || (roll > 90 && kalAngleX < -90)) {
+				kalmanX.setAngle(roll);
+				compAngleX = roll;
+				kalAngleX = roll;
+				gyroXangle = roll;
+			} else {
+				kalAngleX = kalmanX.getAngle(roll, gyroXrate, dt);
+			}
+
+			if (Math.abs(kalAngleX) > 90) {
+				gyroYrate = -gyroYrate;
+			}
+			kalAngleY = kalmanY.getAngle(pitch, gyroYrate, dt);
+
+			gyroXangle += gyroXrate * dt;
+			gyroYangle += gyroYrate * dt;
+			compAngleX = 0.93 * (compAngleX + gyroXrate * dt) + 0.07 * roll;
+			compAngleY = 0.93 * (compAngleY + gyroYrate * dt) + 0.07 * pitch;
+
+			if (gyroXangle < -180 || gyroXangle > 180) gyroXangle = kalAngleX;
+			if (gyroYangle < -180 || gyroYangle > 180) gyroYangle = kalAngleY;
+
+			var accel = {
+				pitch: compAngleY,
+				roll: compAngleX
+			};
 
 //				var magneto = mpu.getCompass(values[6], values[7], values[8]);
 //				console.log(values[6] + ' ' + values[7] + ' ' + values[8]);
 //				console.log(magneto);
 				var magneto = {'x':values[6],'y':values[7], 'z':values[8]};
-				io.emit('accel_data', {accel: accel, magneto: magneto});
+			io.emit('accel_data', {accel: accel, magneto: magneto});
 	
-	    }
+		}
 
     
 
