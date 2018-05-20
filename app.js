@@ -5,6 +5,8 @@
  * HMC5893 Data Sheet
  * https://aerocontent.honeywell.com/aero/common/documents/myaerospacecatalog-documents/Defense_Brochures-documents/HMC5983_3_Axis_Compass_IC.pdf
  * 
+ * MPU925X Library 
+ * https://github.com/miniben-90/mpu9250
  * Compass Module
  * https://github.com/psiphi75/compass-hmc5883l
  */
@@ -18,8 +20,49 @@ var port = process.env.PORT || 3000;
 var ads1x15 = require('node-ads1x15');
 var adc = new ads1x15(1); // set to 0 for ads1015
 var i2c = require('i2c');
+var mpu925x = require('./drivers/mpu925x');
 
-var compass = new HMC5883L(1);
+/* With stick driver it's looking for wrong WHOAMI on MPU */
+var mpu = new mpu925x({UpMagneto: true, DEBUG: true, GYRO_FS: 0, ACCEL_FS: 1});
+
+//var compass = new HMC5883L(1);
+
+	var kalAngleX = 0,
+		mpuInitialized = false,
+		kalAngleY = 0,
+		kalAngleZ = 0,
+		gyroXangle = 0,
+		gyroYangle = 0,
+		gyroZangle = 0,
+		gyroXrate = 0,
+		gyroYrate = 0,
+		gyroZrate = 0,
+		compAngleX = 0,
+		compAngleY = 0,
+		compAngleZ = 0;
+
+var micros = function() {
+		return new Date().getTime();
+	};
+
+timer = micros();
+
+var kalmanX = new mpu.Kalman_filter();
+var kalmanY = new mpu.Kalman_filter();
+
+if(mpu.initialize()) {
+	mpuInitialized = true;
+	var values = mpu.getMotion9();
+	gyroXangle = mpu.getPitch(values);
+	gyroYAngle = mpu.getRoll(values);
+	gyroZAngle = mpu.getYaw(values);
+
+        compAngleX = mpu.getPitch(values);
+	compAngleY = mpu.getRoll(values);
+	compAngleZ = mpu.getYaw(values);
+}
+
+
 
 /*
 var address = 0x1E;
@@ -64,6 +107,13 @@ gps.start(function(lat, lon, satCount, fix, hdop) {
 		io.emit('lon',-1);
 	}
 });
+
+if(!mpu.initialize()) {
+	console.log('ERROR - MPU925X Not Online');
+}
+else {
+	console.log('MPU925X Online');
+}
 
 
 //Whenever someone connects this gets executed
@@ -135,12 +185,64 @@ io.on('connection', function(socket){
          io.emit('temp', temp);
          console.log('temp', temp);
       }
-    });
+	});
+
+	if(mpuInitialized) {
+	var values = mpu.getMotion9();
+
+				var dt = (micros() - timer) / 1000000;
+				timer = micros();
+
+				pitch = mpu.getPitch(values);
+				roll = mpu.getRoll(values);
+				yaw = mpu.getYaw(values);
+
+				var gyroXrate = values[3] / 131.0;
+				var gyroYrate = values[4] / 131.0;
+				var gyroZrate = values[5] / 131.0;
+
+				if ((roll < -90 && kalAngleX > 90) || (roll > 90 && kalAngleX < -90)) {
+					kalmanX.setAngle(roll);
+					compAngleX = roll;
+					kalAngleX = roll;
+					gyroXangle = roll;
+				} else {
+					kalAngleX = kalmanX.getAngle(roll, gyroXrate, dt);
+				}
+
+				if (Math.abs(kalAngleX) > 90) {
+					gyroYrate = -gyroYrate;
+				}
+				kalAngleY = kalmanY.getAngle(pitch, gyroYrate, dt);
+
+				gyroXangle += gyroXrate * dt;
+				gyroYangle += gyroYrate * dt;
+				compAngleX = 0.93 * (compAngleX + gyroXrate * dt) + 0.07 * roll;
+				compAngleY = 0.93 * (compAngleY + gyroYrate * dt) + 0.07 * pitch;
+
+				if (gyroXangle < -180 || gyroXangle > 180) gyroXangle = kalAngleX;
+				if (gyroYangle < -180 || gyroYangle > 180) gyroYangle = kalAngleY;
+
+				var accel = {
+					pitch: compAngleY,
+					roll: compAngleX
+				};
+
+//				var magneto = mpu.getCompass(values[6], values[7], values[8]);
+//				console.log(values[6] + ' ' + values[7] + ' ' + values[8]);
+//				console.log(magneto);
+				var magneto = {'x':values[6],'y':values[7], 'z':values[8]};
+				io.emit('accel_data', {accel: accel, magneto: magneto});
+	
+	    }
+
+    
+
 //	compass.getHeadingDegrees('x','y', function(err, heading) {
 //		console.log(heading* 180 / Math.PI);
 //	});
 
-
+/*
 	compass.getRawValues(function(err, vals) {
 		if(err) {
 			console.log(err);
@@ -148,7 +250,7 @@ io.on('connection', function(socket){
 		else {
 			console.log(vals);
 		}
-	});
+	});*/
 
 
 

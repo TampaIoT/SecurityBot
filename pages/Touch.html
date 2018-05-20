@@ -382,6 +382,11 @@ function draw() {
 		voltage = msg;
 	});
 
+        socket.on('accel_data', function(msg) {
+		document.getElementById("acc").innerHTML = 'Acc<br/>' +  msg.accel.pitch.toFixed(2) + ',' + msg.accel.roll.toFixed(2);
+		document.getElementById("mag").innerHTML = 'Mag<br />' + msg.magneto.x.toFixed(0) + ',' + msg.magneto.y.toFixed(0) + ',' + msg.magneto.z.toFixed(0);
+        });
+
 	socket.on('lat', function(msg){
 		console.log('lat recv', msg);
 		document.getElementById("lat").innerHTML = 'Latitude: ' + msg.toFixed(6) ;
@@ -593,10 +598,12 @@ function handleHeadlightClick(cb) {
 </center>
 
 <div class="sidenav">
-  <center id="temp" style="padding:40%;">????</center>
-  <center id="volt" style="padding:40%;">????</center>
-  <center id="lat" style="padding:40%;">Latitude: ????</center>
-  <center id="lon" style="padding:40%;">Longitude: ????</center>
+  <center id="temp" style="padding:10%;">????</center>
+  <center id="volt" style="padding:10%;">????</center>
+  <center id="acc" style="padding:10%;">Acc: ????</center>
+  <center id="mag" style="padding:10%;">Mag: ????</center>
+  <center id="lat" style="padding:10%;">Latitude: ????</center>
+  <center id="lon" style="padding:10%;">Longitude: ????</center>
 </div>
 <div class="sidenav" style="right:0;z-index: 2;">
   <center class="off_button" type="button" onclick="shutdown()">OFF</center>
