@@ -12,7 +12,7 @@
  */
 var app = require('express')();
 var HMC5883L = require('compass-hmc5883l');
-var gps = require('./drivers/gps.js');
+//var gps = require('./drivers/gps.js');
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
 var exec = require('child_process').exec, child;
@@ -71,6 +71,8 @@ tfmini.start(function(dist, st, quality) {
 	lidarDist = dist;
 	lidarSt = st;
 	lidarSignalQuality = quality;
+}, function(err) {
+
 });
 
 var Gpio = require('pigpio').Gpio,
@@ -94,6 +96,7 @@ child = exec("sudo bash start_stream.sh", function(error, stdout, stderr){});
 //compass.setScaleMatrix(1, 1, 1);
 //compass.initialize();
 
+/*
 gps.start(function(lat, lon, satCount, fix, hdop) {
 	console.log("Position Detected", lat, lon, satCount, fix, hdop); 
 
@@ -107,7 +110,7 @@ gps.start(function(lat, lon, satCount, fix, hdop) {
 		io.emit('lon',-1);
 	}
 });
-
+*/
 if(!mpu.initialize()) {
 	console.log('ERROR - MPU925X Not Online');
 }
