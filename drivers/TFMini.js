@@ -1,8 +1,6 @@
 var SerialPort = require('serialport');
 
 var LiDAR = (function () {
-
-
 	const TFMINI_BAUDRATE = 115200;
 
 	const TFMINI_FRAME_SIZE = 7;
@@ -36,6 +34,10 @@ var LiDAR = (function () {
 		serialPort.on("open", function () {
 			console.log('lidar port open');
 			const init = [0x42, 0x57, 0x02, 0x00, 0x00, 0x00, 0x01, 0x06];
+
+			if (this.opened) {
+				this.opened();
+			}
 
 			serialPort.on('data', function (data) {
 				numbChRead = 0;

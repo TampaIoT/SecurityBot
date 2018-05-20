@@ -382,10 +382,10 @@ function draw() {
 		voltage = msg;
 	});
 
-        socket.on('accel_data', function(msg) {
+    socket.on('accel_data', function(msg) {
 		document.getElementById("acc").innerHTML = 'Acc<br/>' +  msg.accel.pitch.toFixed(2) + ',' + msg.accel.roll.toFixed(2);
 		document.getElementById("mag").innerHTML = 'Mag<br />' + msg.magneto.x.toFixed(0) + ',' + msg.magneto.y.toFixed(0) + ',' + msg.magneto.z.toFixed(0);
-        });
+    });
 
 	socket.on('lat', function(msg){
 		console.log('lat recv', msg);
@@ -399,8 +399,7 @@ function draw() {
 		latitude = msg;
 	});
 
-		socket.on('lidar', function(msg){
-		console.log('lat recv', msg);
+	socket.on('lidar', function(msg){
 		document.getElementById("lidar").innerHTML = 'Latitude: ' + msg.dist.toFixed(6) ;
 		longitude = msg;
 	});
