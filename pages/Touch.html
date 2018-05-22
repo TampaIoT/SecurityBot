@@ -33,6 +33,7 @@
 		background-color:#ff0000;
 	}
 	/* Headlight toggle switch (source: http://callmenick.com/post/css-toggle-switch-examples) */
+
 	.cmn-toggle {
 		position: absolute;
 		margin-left: -9999px;
@@ -93,7 +94,7 @@
 		text-align:center;
 		
     padding-top: 20%;
-    padding-bottom: 20%;
+    padding-bottom: 5%;
     font-size: 100%;
     margin: 10% 7%;
 		cursor: pointer;
@@ -110,7 +111,7 @@
 		border-color: white;
 		text-align:center;
     
-		padding-top: 20%;
+		padding-top: 5%;
     padding-bottom: 20%;
     font-size: 16px;
 		margin: 40% 7% 10%;
@@ -383,24 +384,22 @@ function draw() {
 	});
 
     socket.on('accel_data', function(msg) {
-		document.getElementById("acc").innerHTML = 'Acc<br/>' +  msg.accel.pitch.toFixed(2) + ',' + msg.accel.roll.toFixed(2);
+		document.getElementById("acc").innerHTML = 'Acc<br/>' +  msg.accel.pitch.toFixed(1) + ',' + msg.accel.roll.toFixed(1) + ',' + msg.accel.yaw.toFixed(1);
 		document.getElementById("mag").innerHTML = 'Mag<br />' + msg.magneto.x.toFixed(0) + ',' + msg.magneto.y.toFixed(0) + ',' + msg.magneto.z.toFixed(0);
     });
 
 	socket.on('lat', function(msg){
-		console.log('lat recv', msg);
 		document.getElementById("lat").innerHTML = 'Latitude: ' + msg.toFixed(6) ;
 		longitude = msg;
 	});
 
 	socket.on('lon', function(msg){
-		console.log('lon recv', msg);
 		document.getElementById("lon").innerHTML = 'Longitude: ' + msg.toFixed(6);
 		latitude = msg;
 	});
 
 	socket.on('lidar', function(msg){
-		document.getElementById("lidar").innerHTML = 'Latitude: ' + msg.dist.toFixed(6) ;
+		document.getElementById("lidar").innerHTML = 'Ranger: ' + msg.dist.toFixed(0) + 'cm';
 		longitude = msg;
 	});
 
@@ -598,6 +597,11 @@ function handleHeadlightClick(cb) {
   socket.emit('light', headlight);
 }
 
+function handleHornClick(cb) {
+  console.log('sent horn click');
+  socket.emit('horn', 1);
+}
+
 </script>
 
 </center>
@@ -619,6 +623,14 @@ function handleHeadlightClick(cb) {
     <div class="switch">
         <input id="cmn-toggle"css class="cmn-toggle cmn-toggle-round-flat" type="checkbox" onclick="handleHeadlightClick(this)">
         <label for="cmn-toggle">LIGHT</label>
+       
+    </div>
+  </div>
+  <div>
+    <div class="switch">
+        <input id="hrn-toggle"css class="cmn-toggle cmn-toggle-round-flat" type="checkbox" onclick="handleHornClick(this)">
+        <label for="hrn-toggle">HORN</label>
+       
     </div>
   </div>
 </div>

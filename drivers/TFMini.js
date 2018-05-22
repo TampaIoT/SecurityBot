@@ -67,8 +67,6 @@ var LiDAR = (function () {
 					const signalQuality = frame[5];
 
 					updateHandler(dist, st, signalQuality);
-
-					console.log(dist, st, signalQuality);
 				}
 			});
 		});

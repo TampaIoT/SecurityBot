@@ -54,6 +54,7 @@ timer = micros();
 
 var kalmanX = new mpu.Kalman_filter();
 var kalmanY = new mpu.Kalman_filter();
+var kalmanZ = new mpu.Kalman_filter();
 
 if(mpu.initialize()) {
 	mpuInitialized = true;
@@ -121,11 +122,8 @@ else {
 //Whenever someone connects this gets executed
 io.on('connection', function(socket){
   console.log('A user connected');
-  
+
   socket.on('pos', function (msx, msy) {
-    //console.log('X:' + msx + ' Y: ' + msy);
-    //io.emit('posBack', msx, msy);
-	
     msx = Math.min(Math.max(parseInt(msx), -255), 255);
     msy = Math.min(Math.max(parseInt(msy), -255), 255);
 
@@ -146,19 +144,19 @@ io.on('connection', function(socket){
     }
   });
 
-	socket.on('horn', function(toggle) {
-		BUZZER.digitalWrite(0);
-		setTimeout(function() {
-			BUZZER.digitalWrite(1);
-		}, 500);
-    LED.digitalWrite(toggle);    
-  });  
+  socket.on('horn', function(toggle) {
+	console.log('horn click');
+	BUZZER.digitalWrite(0);
+	setTimeout(function() {
+		BUZZER.digitalWrite(1);
+	}, 500);
+  });
 
   socket.on('light', function(toggle) {
-		console.log(toggle);
-    LED.digitalWrite(toggle);    
-  });  
-  
+    console.log('Toggle Light', toggle);
+    LED.digitalWrite(toggle);
+  });
+
   socket.on('cam', function(toggle) {
     var numPics = 0;
     console.log('Taking a picture..');
@@ -172,80 +170,87 @@ io.on('connection', function(socket){
         io.emit('cam', 1);
       });
     });
-    
+
   });
-  
+
   socket.on('power', function(toggle) {
     child = exec("sudo poweroff");
   });
-  
+
   //Whenever someone disconnects this piece of code is executed
   socket.on('disconnect', function () {
     console.log('A user disconnected');
   });
 
   setInterval(function(){ // send temperature every 5 sec
-			child = exec("cat /sys/class/thermal/thermal_zone0/temp", function(error, stdout, stderr){
-				if(error !== null){
-					console.log('exec error: ' + error);
-				} else {
-					var temp = parseFloat(stdout)/1000;
-					io.emit('temp', temp);
-					console.log('temp', temp);
-				}
-		});
+	console.log("Timer Fired");
 
-		io.emit('lidar', {dist:lidarDist, st: lidarDist, signalQuality: lidarSignalQuality});
+	child = exec("cat /sys/class/thermal/thermal_zone0/temp", function(error, stdout, stderr){
+	if(error !== null){
+		console.log('exec error: ' + error);
+	} else {
+		var temp = parseFloat(stdout)/1000;
+		io.emit('temp', temp);
+		console.log('temp', temp);
+		}
+	});
 
-		if(mpuInitialized) {
-			var values = mpu.getMotion9();
+	io.emit('lidar', {dist:lidarDist, st: lidarDist, signalQuality: lidarSignalQuality});
 
-			var dt = (micros() - timer) / 1000000;
-			timer = micros();
+	if(mpuInitialized) {
+		var values = mpu.getMotion9();
 
-			pitch = mpu.getPitch(values);
-			roll = mpu.getRoll(values);
-			yaw = mpu.getYaw(values);
+		var dt = (micros() - timer) / 1000000;
+		timer = micros();
 
-			var gyroXrate = values[3] / 131.0;
-			var gyroYrate = values[4] / 131.0;
-			var gyroZrate = values[5] / 131.0;
+		pitch = mpu.getPitch(values);
+		roll = mpu.getRoll(values);
+		yaw = mpu.getYaw(values);
 
-			if ((roll < -90 && kalAngleX > 90) || (roll > 90 && kalAngleX < -90)) {
-				kalmanX.setAngle(roll);
-				compAngleX = roll;
-				kalAngleX = roll;
-				gyroXangle = roll;
-			} else {
-				kalAngleX = kalmanX.getAngle(roll, gyroXrate, dt);
-			}
+		var gyroXrate = values[3] / 131.0;
+		var gyroYrate = values[4] / 131.0;
+		var gyroZrate = values[5] / 131.0;
 
-			if (Math.abs(kalAngleX) > 90) {
-				gyroYrate = -gyroYrate;
-			}
-			kalAngleY = kalmanY.getAngle(pitch, gyroYrate, dt);
+		if ((roll < -90 && kalAngleX > 90) || (roll > 90 && kalAngleX < -90)) {
+			kalmanX.setAngle(roll);
+			compAngleX = roll;
+			kalAngleX = roll;
+			gyroXangle = roll;
+		} else {
+			kalAngleX = kalmanX.getAngle(roll, gyroXrate, dt);
+		}
 
-			gyroXangle += gyroXrate * dt;
-			gyroYangle += gyroYrate * dt;
-			compAngleX = 0.93 * (compAngleX + gyroXrate * dt) + 0.07 * roll;
-			compAngleY = 0.93 * (compAngleY + gyroYrate * dt) + 0.07 * pitch;
+		if (Math.abs(kalAngleX) > 90) {
+			gyroYrate = -gyroYrate;
+		}
+		kalAngleY = kalmanY.getAngle(pitch, gyroYrate, dt);
+		kalAngleZ = kalmanZ.getAngle(yaw, gyroZrate, dt);
 
-			if (gyroXangle < -180 || gyroXangle > 180) gyroXangle = kalAngleX;
-			if (gyroYangle < -180 || gyroYangle > 180) gyroYangle = kalAngleY;
+		gyroXangle += gyroXrate * dt;
+		gyroYangle += gyroYrate * dt;
+		gyroZangle += gyroZrate * dt;
 
-			var accel = {
-				pitch: compAngleY,
-				roll: compAngleX
-			};
+		compAngleX = 0.93 * (compAngleX + gyroXrate * dt) + 0.07 * roll;
+		compAngleY = 0.93 * (compAngleY + gyroYrate * dt) + 0.07 * pitch;
+		compAngleZ = 0.93 * (compAngleZ + gyroZrate * dt) + 0.07 * yaw;
+
+		if (gyroXangle < -180 || gyroXangle > 180) gyroXangle = kalAngleX;
+		if (gyroYangle < -180 || gyroYangle > 180) gyroYangle = kalAngleY;
+		if (gyroZangle < -180 || gyroZangle > 180) gyroZangle = kalAngleZ;
+
+		var accel = {
+			pitch: compAngleY,
+			roll: compAngleX,
+                        yaw: compAngleZ
+		};
 
 //				var magneto = mpu.getCompass(values[6], values[7], values[8]);
 //				console.log(values[6] + ' ' + values[7] + ' ' + values[8]);
 //				console.log(magneto);
 				var magneto = {'x':values[6],'y':values[7], 'z':values[8]};
-			io.emit('accel_data', {accel: accel, magneto: magneto});
-	
-		}
-    
+		io.emit('accel_data', {accel: accel, magneto: magneto});
+	}
+
 //	compass.getHeadingDegrees('x','y', function(err, heading) {
 //		console.log(heading* 180 / Math.PI);
 //	});
@@ -269,7 +274,7 @@ io.on('connection', function(socket){
         }
       });
     }
-  }, 5000);
+  }, 1000);
 
 });
 
